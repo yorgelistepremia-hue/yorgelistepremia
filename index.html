@@ -170,9 +170,9 @@
     
     <script>
         const CONFIG = {
+            supabaseUrl: "https://ubgpfgazgaotnhqieaew.supabase.co",
+            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZ3BmZ2F6Z2FvdG5ocWllYWV3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzM3MjU3MSwiZXhwIjoyMDcyOTQ4NTcxfQ.XQbFxWt9rjm_lEDaSY0R-6FRQJs8Dv8SPtxSjIclW3Q",
             adminWhatsApp: "584120000000",
-            supabaseUrl: "https://iqigjulbvmkokorecjie.supabase.co",
-            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxaWdqdWxidm1rb2tvcmVjamllIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzQ0MjAzNiwiZXhwIjoyMDY5MDE4MDM2fQ.F_ewIibBG7QgpSYfnUKzosl46prz7Kv_BD8-Xnrxj-c",
             totalTickets: 10000, pricePerTicket: 80,
             prizeImage: "https://i.ibb.co/RTbcLX0p/combo-ogra-2-0.jpg"
         };
@@ -195,7 +195,9 @@
 
         async function fetchSoldTickets() {
             try {
-                const { data } = await fetch(`${CONFIG.supabaseUrl}/rest/v1/tickets?select=ticket_number`, { headers: { 'apikey': CONFIG.supabaseKey } }).then(res => res.json().then(data => ({data})));
+                const response = await fetch(`${CONFIG.supabaseUrl}/rest/v1/tickets?select=ticket_number`, { headers: { 'apikey': CONFIG.supabaseKey } });
+                if (!response.ok) throw new Error('Error de red al obtener boletos');
+                const data = await response.json();
                 soldTicketNumbers = new Set(data.map(t => t.ticket_number));
                 availableTickets = Array.from({ length: CONFIG.totalTickets }, (_, i) => i).filter(num => !soldTicketNumbers.has(num));
                 updateProgressBar();
@@ -305,9 +307,7 @@
         }
 
         function setupEventListeners() {
-            document.getElementById('startBtn').onclick = () => {
-                document.getElementById('quantityModal').classList.remove('modal-hidden');
-            };
+            document.getElementById('startBtn').onclick = () => document.getElementById('quantityModal').classList.remove('modal-hidden');
             document.getElementById('checkTicketsBtn').onclick = () => document.getElementById('ticketModal').classList.remove('modal-hidden');
             document.getElementById('quickSelectBtn').onclick = () => handleSelectionChoice('quick');
             document.getElementById('manualSelectBtn').onclick = () => handleSelectionChoice('manual');
@@ -320,10 +320,14 @@
             document.getElementById('backToBlocksBtn').onclick = renderBlockSelector;
             document.getElementById('clearSelectionBtn').onclick = () => {
                 selectedTickets = [];
-                const currentGridTitle = document.getElementById('gridTitle').textContent;
                 const isManualActive = document.getElementById('manualSelectBtn').classList.contains('active');
                 if(isManualActive) {
-                    generateTicketGrid({blockIndex: -1}); // Rerender current view
+                   const currentGridVisible = document.getElementById('ticketGridDisplay').style.display === 'block';
+                   if(currentGridVisible) {
+                       generateTicketGrid({ search: document.getElementById('searchNumberInput').value });
+                   } else {
+                       renderBlockSelector();
+                   }
                 }
                 updateTotal();
             };
@@ -386,16 +390,33 @@
         async function saveDataAndSend() {
             const data = {
                 name: document.getElementById('fullName').value, id_number: document.getElementById('idNumber').value,
-                phone: document.getElementById('phoneNumber').value, tickets_data: selectedTickets,
+                phone: document.getElementById('phoneNumber').value, tickets_data: selectedTickets.sort((a,b)=>a-b),
                 reference: document.getElementById('referenceNumber').value, status: "PENDIENTE"
             };
             if (!data.name || !data.id_number || !data.phone || !data.reference) { alert("Por favor, completa todos los campos."); return; }
-            alert("Serás redirigido a WhatsApp. Por favor, no olvides adjuntar manualmente tu comprobante en el chat.");
-            await fetch(`${CONFIG.supabaseUrl}/rest/v1/transactions`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': CONFIG.supabaseKey }, body: JSON.stringify(data) });
-            const amount = selectedTickets.length * CONFIG.pricePerTicket;
-            const message = encodeURIComponent(`*NUEVO PAGO - YORGELIS TE PREMIA*\n\n*Nombre:* ${data.name}\n*Cédula:* ${data.id_number}\n*Teléfono:* ${data.phone}\n*Boletos:* ${selectedTickets.length} (${selectedTickets.map(n => formatTicketNumber(n)).join(', ')})\n*Referencia:* ${data.reference}\n*Monto:* ${amount} Bs.\n\n_Adjunto mi comprobante._`);
-            window.open(`https://wa.me/${CONFIG.adminWhatsApp}?text=${message}`, '_blank');
-            goToStep(4);
+
+            try {
+                const response = await fetch(`${CONFIG.supabaseUrl}/rest/v1/transactions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'apikey': CONFIG.supabaseKey, 'Authorization': `Bearer ${CONFIG.supabaseKey}` },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Error al guardar en la base de datos.');
+                }
+
+                alert("Serás redirigido a WhatsApp. Por favor, no olvides adjuntar manualmente tu comprobante en el chat.");
+                const amount = selectedTickets.length * CONFIG.pricePerTicket;
+                const message = encodeURIComponent(`*NUEVO PAGO - YORGELIS TE PREMIA*\n\n*Nombre:* ${data.name}\n*Cédula:* ${data.id_number}\n*Teléfono:* ${data.phone}\n*Boletos:* ${selectedTickets.length} (${selectedTickets.map(n => formatTicketNumber(n)).join(', ')})\n*Referencia:* ${data.reference}\n*Monto:* ${amount} Bs.\n\n_Adjunto mi comprobante._`);
+                window.open(`https://wa.me/${CONFIG.adminWhatsApp}?text=${message}`, '_blank');
+                goToStep(4);
+
+            } catch(error) {
+                console.error("Error al guardar:", error);
+                alert(`Hubo un problema al registrar tu compra: ${error.message}. Por favor, verifica que la referencia no se haya usado antes y vuelve a intentarlo.`);
+            }
         }
         
         async function searchPurchases() {
