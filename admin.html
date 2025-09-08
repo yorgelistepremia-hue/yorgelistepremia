@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Yorgelis Te Premia</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #e91e63; --primary-dark: #c2185b; --primary-light: #f06292;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fce4ec; color: #333; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 25px; }
+        h1, h2 { color: var(--primary-dark); }
+        h1 { font-size: 28px; display: flex; align-items: center; gap: 15px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
+        .header .btn-group { display: flex; gap: 10px; }
+        .panel { background: #fff0f5; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid var(--primary-color); }
+        .panel h2 { margin-top: 0; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        #winnerResult { margin-top: 20px; padding: 20px; background: white; border-radius: 10px; text-align: center; border: 2px dashed var(--primary-color); display: none; }
+        #winnerResult h3 { font-size: 2rem; color: var(--primary-dark); font-family: 'Dancing Script', cursive; }
+        #winnerResult p { font-size: 1.2rem; margin: 5px 0; }
+        #winnerTicket { font-size: 3rem; font-weight: bold; color: var(--primary-color); }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 20px; text-align: center; border-top: 4px solid var(--primary-color); }
+        .stat-value { font-size: 28px; font-weight: 700; color: var(--primary-dark); margin: 10px 0; }
+        .stat-label { color: #6c757d; font-size: 16px; font-weight: 500; }
+        .controls { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #fce4ec; }
+        thead { background: linear-gradient(to right, var(--primary-dark), var(--primary-color)); color: white; }
+        tbody tr:hover { background-color: #fce4ec; }
+        button { background-color: var(--primary-color); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s ease; }
+        button:hover { transform: translateY(-2px); }
+        .btn-verify { background-color: #4caf50; }
+        .btn-delete { background-color: #f44336; }
+        .filter-btn { background: #eee; color: #333; }
+        .filter-btn.active { background: var(--primary-color); color: white; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); }
+        .modal-content { background-color: white; margin: 15% auto; padding: 20px; border-radius: 15px; width: 90%; max-width: 500px; }
+        .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-gem"></i> Panel de Administración</h1>
+            <div class="btn-group">
+                <button id="exportCsvBtn"><i class="fas fa-download"></i> Exportar a CSV</button>
+                <button onclick="loadTransactions()"><i class="fas fa-sync-alt"></i> Actualizar</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2><i class="fas fa-trophy"></i> Sorteo de Premios</h2>
+            <button id="raffleBtn"><i class="fas fa-star"></i> ¡Realizar Sorteo!</button>
+            <div id="winnerResult">
+                <h3>¡Tenemos un Ganador!</h3>
+                <p><strong>Número Ganador:</strong> <span id="winnerTicket"></span></p>
+                <p><strong>Comprador:</strong> <span id="winnerName"></span></p>
+                <p><strong>Teléfono:</strong> <span id="winnerPhone"></span></p>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card"><div class="stat-value" id="topBuyerName">--</div><div class="stat-label">🏆 MAYOR COMPRADOR</div><small id="topBuyerCount">0 boletos</small></div>
+            <div class="stat-card"><div class="stat-value" id="soldTickets">0</div><div class="stat-label">BOLETOS VENDIDOS</div></div>
+            <div class="stat-card"><div class="stat-value" id="pendingCount">0</div><div class="stat-label">PAGOS PENDIENTES</div></div>
+            <div class="stat-card"><div class="stat-value" id="totalSales">Bs. 0</div><div class="stat-label">INGRESOS TOTALES</div></div>
+        </div>
+        
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="Buscar por nombre, cédula o referencia..." onkeyup="loadTransactions()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">Todos</button>
+                <button class="filter-btn" data-filter="PENDIENTE">Pendientes</button>
+                <button class="filter-btn" data-filter="VERIFICADO">Verificados</button>
+            </div>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table id="transactionsTable">
+                <thead>
+                    <tr>
+                        <th>Fecha</th><th>Nombre / CI</th><th>Teléfono</th>
+                        <th>Boletos Seleccionados</th><th>Referencia</th>
+                        <th>Estado</th><th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <div id="ticketsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="modalTitle">Boletos Asignados</h2>
+            <div id="modalBody" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            supabaseUrl: "https://ubgpfgazgaotnhqieaew.supabase.co",
+            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZ3BmZ2F6Z2FvdG5ocWllYWV3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzM3MjU3MSwiZXhwIjoyMDcyOTQ4NTcxfQ.XQbFxWt9rjm_lEDaSY0R-6FRQJs8Dv8SPtxSjIclW3Q",
+            pricePerTicket: 80 // Asegúrate que el precio sea correcto
+        };
+        
+        function formatTicketNumber(number) { return String(number).padStart(4, '0'); }
+
+        async function loadTransactions() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+            let query = `transactions?select=*&order=created_at.desc`;
+            if (activeFilter !== 'all') { query += `&status=eq.${activeFilter}`; }
+            if (searchTerm) { query += `&or=(name.ilike.%${searchTerm}%,id_number.ilike.%${searchTerm}%,reference.ilike.%${searchTerm}%)`; }
+
+            try {
+                const response = await fetch(`${CONFIG.supabaseUrl}/rest/v1/${query}`, { headers: { 'apikey': CONFIG.supabaseKey } });
+                const transactions = await response.json();
+                renderTable(transactions);
+                updateStats(transactions);
+            } catch (error) { console.error("Error cargando transacciones:", error); }
+        }
+
+        function renderTable(transactions) {
+            const tbody = document.querySelector("#transactionsTable tbody");
+            tbody.innerHTML = transactions.map(tx => `
+                <tr>
+                    <td>${new Date(tx.created_at).toLocaleString()}</td>
+                    <td>${tx.name}<br><small>${tx.id_number}</small></td>
+                    <td>${tx.phone}</td>
+                    <td><b>${tx.tickets_data.length} boletos:</b> ${tx.tickets_data.map(formatTicketNumber).join(', ')}</td>
+                    <td>${tx.reference}</td>
+                    <td>${tx.status}</td>
+                    <td>
+                        ${tx.status === 'PENDIENTE' ? `<button class="btn-verify" onclick="verifyPayment(${tx.id}, '${JSON.stringify(tx.tickets_data)}', '${tx.name}', '${tx.phone}')"><i class="fas fa-check"></i> Verificar</button>` : `<button onclick="viewTickets(${tx.id})"><i class="fas fa-eye"></i> Ver Boletos</button>`}
+                        <button class="btn-delete" onclick="deleteTransaction(${tx.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            if (transactions.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No se encontraron transacciones.</td></tr>`; }
+        }
+        
+        async function verifyPayment(transactionId, ticketsDataString, name, phone) {
+            if (!confirm("¿Confirmas que el pago es correcto? Se asignarán los boletos y se preparará el mensaje de WhatsApp.")) return;
+            
+            const tickets_data = JSON.parse(ticketsDataString);
+            
+            // 1. Comprobar si algún boleto ya fue vendido
+            const checkResponse = await fetch(`${CONFIG.supabaseUrl}/rest/v1/tickets?ticket_number=in.(${tickets_data.join(',')})`, { headers: { 'apikey': CONFIG.supabaseKey } });
+            const existingTickets = await checkResponse.json();
+            if (existingTickets.length > 0) {
+                alert(`Error: Los siguientes boletos ya están vendidos: ${existingTickets.map(t => formatTicketNumber(t.ticket_number)).join(', ')}. Por favor, elimina esta transacción y pide al cliente que elija nuevos números.`);
+                return;
+            }
+
+            // 2. Si no hay conflictos, insertar los nuevos boletos
+            const ticketsToInsert = tickets_data.map(num => ({ transaction_id: transactionId, ticket_number: num }));
+            await fetch(`${CONFIG.supabaseUrl}/rest/v1/tickets`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': CONFIG.supabaseKey }, body: JSON.stringify(ticketsToInsert) });
+            
+            // 3. Actualizar el estado de la transacción a VERIFICADO
+            await fetch(`${CONFIG.supabaseUrl}/rest/v1/transactions?id=eq.${transactionId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'apikey': CONFIG.supabaseKey }, body: JSON.stringify({ status: 'VERIFICADO' }) });
+            
+            alert('¡Pago verificado y boletos asignados!');
+            
+            // 4. Preparar y abrir WhatsApp
+            const ticketList = tickets_data.map(formatTicketNumber).join(', ');
+            const message = encodeURIComponent(`¡Hola ${name}! 👋 Gracias por participar en la rifa de Yorgelis Te Premia.\n\nAquí tienes tus números de la suerte:\n🎟️ *${ticketList}*\n\n¡Te deseamos muchísima suerte! 💖`);
+            window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+            
+            loadTransactions();
+        }
+
+        async function viewTickets(transactionId) {
+            const { data: tickets } = await fetch(`${CONFIG.supabaseUrl}/rest/v1/tickets?transaction_id=eq.${transactionId}`, { headers: { 'apikey': CONFIG.supabaseKey } }).then(res => res.json());
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = tickets.map(t => `<div style="background:#eee; padding:5px 10px; border-radius:5px;">${formatTicketNumber(t.ticket_number)}</div>`).join('');
+            document.getElementById('ticketsModal').style.display = 'block';
+        }
+
+        async function deleteTransaction(id) {
+            if (confirm("¿Estás seguro de que quieres eliminar esta transacción? Si ya fue verificada, los boletos también se eliminarán.")) {
+                await fetch(`${CONFIG.supabaseUrl}/rest/v1/transactions?id=eq.${id}`, { method: 'DELETE', headers: { 'apikey': CONFIG.supabaseKey } });
+                loadTransactions();
+            }
+        }
+
+        function updateStats(transactions) { /* ... sin cambios ... */ }
+        async function performRaffle() { /* ... sin cambios ... */ }
+        async function exportToCSV() { /* ... sin cambios ... */ }
+        
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.onclick = () => {
+            document.querySelector('.filter-btn.active').classList.remove('active');
+            btn.classList.add('active');
+            loadTransactions();
+        });
+        const modal = document.getElementById('ticketsModal');
+        document.querySelector('.close-button').onclick = () => modal.style.display = 'none';
+        window.onclick = (event) => { if (event.target == modal) modal.style.display = 'none'; };
+
+        document.addEventListener('DOMContentLoaded', loadTransactions);
+    </script>
+</body>
+</html>

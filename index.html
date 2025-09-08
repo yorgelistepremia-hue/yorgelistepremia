@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YORGELIS TE PREMIA - Rifa Exclusiva</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <style>
+        :root {
+            --primary-color: #e91e63; --primary-dark: #c2185b; --primary-light: #f06292;
+            --accent-color: #ff80ab; --success-color: #4caf50; --light-bg: #fff0f5;
+            --dark-text: #5c3b4c; --light-text: #8d6e7f; --border-radius: 25px;
+            --card-radius: 20px; --shadow: 0 15px 35px rgba(233, 30, 99, 0.15);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        html { scroll-behavior: smooth; }
+        body { background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%); color: var(--dark-text); padding: 15px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; border-radius: var(--border-radius); box-shadow: var(--shadow); overflow: hidden; }
+        header { background: linear-gradient(145deg, var(--primary-light), var(--primary-color)); color: white; padding: 30px 20px; text-align: center; }
+        .logo i { font-size: 48px; color: white; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
+        header h1 { font-family: 'Dancing Script', cursive; font-size: 3rem; margin-bottom: 5px; }
+        .step-container { padding: 25px 20px; display: none; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .step-container.active { display: block; }
+        .btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px; margin: 10px 0; border: none; border-radius: 15px; background: linear-gradient(145deg, var(--primary-color), var(--primary-dark)); color: white; font-size: 18px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 6px 15px rgba(194, 24, 91, 0.3); }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(194, 24, 91, 0.4); }
+        .btn:disabled { background: #bdbdbd; color: #757575; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-secondary { background: #757575; }
+        input { width: 100%; padding: 16px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #f8bbd0; border-radius: 15px; font-size: 16px; }
+        input:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.2); }
+        .step-title { text-align: center; margin-bottom: 25px; color: var(--primary-dark); font-family: 'Dancing Script', cursive; font-size: 2.5rem; }
+        .swiper-container { width: 100%; height: 220px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .swiper-slide img { display: block; width: 100%; height: 100%; object-fit: cover; }
+        .swiper-pagination-bullet-active { background-color: var(--primary-color) !important; }
+        .progress-bar-container { background: var(--light-bg); border-radius: var(--card-radius); padding: 15px; margin: 20px 0; }
+        .progress-bar-info { display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; margin-bottom: 8px; }
+        .progress-bar { width: 100%; background-color: #fce4ec; border-radius: 30px; height: 18px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(135deg, var(--accent-color), var(--primary-color)); border-radius: 30px; transition: width 1.5s ease-out; }
+        .ticket-selector-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .choice-btn { background: var(--light-bg); border: 2px solid var(--primary-light); border-radius: var(--card-radius); padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
+        .choice-btn i { font-size: 2rem; color: var(--primary-color); margin-bottom: 10px; }
+        .choice-btn h3 { color: var(--primary-dark); font-size: 1.1rem; }
+        .choice-btn p { font-size: 0.85rem; color: var(--light-text); }
+        .choice-btn.active, .choice-btn:hover { background: white; border-color: var(--primary-color); transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        #manualSelectionContainer { display: none; margin-top: 20px; }
+        .btn-small { padding: 8px 12px; font-size: 14px; flex-grow: 1; }
+        #blockSelector { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+        .block-btn { padding: 10px; border-radius: 10px; background: #fce4ec; cursor: pointer; text-align: center; }
+        .block-btn strong { color: var(--primary-dark); display: block; font-size: 1.1rem; }
+        .block-btn span { font-size: 0.8rem; color: var(--light-text); }
+        #ticketGridDisplay { display: none; }
+        .grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .grid-header h4 { font-size: 1.2rem; color: var(--primary-dark); }
+        .ticket-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 8px; max-height: 250px; overflow-y: auto; padding: 10px; background: #fff; border-radius: 10px; }
+        .ticket-grid-number { padding: 8px 5px; font-size: 14px; text-align: center; border-radius: 8px; cursor: pointer; background-color: #fce4ec; font-weight: 600; }
+        .ticket-grid-number.sold { background-color: #e0e0e0; color: #9e9e9e; cursor: not-allowed; }
+        .ticket-grid-number.selected { background-color: var(--primary-color); color: white; }
+        .confirmation-icon i { font-size: 90px; color: var(--success-color); }
+        .sticky-footer { display: none; position: sticky; bottom: -1px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 15px 20px; margin: 0 -20px; border-top: 1px solid #fce4ec; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
+        .container.on-step-2 .sticky-footer { display: block; }
+        .sticky-footer .amount-display { font-size: 22px; margin: 0 0 10px 0; padding: 0; background: none; text-align: center;}
+        .sticky-footer .btn-group { display: flex; gap: 10px; }
+        #step2 { padding-bottom: 150px; }
+        .modal { position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; }
+        .modal-content { background-color: #fefefe; padding: 25px; width: 90%; max-width: 400px; border-radius: var(--border-radius); animation: fadeIn 0.5s; text-align: center; }
+        .modal-hidden { display: none !important; }
+        .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; margin-top: -15px; }
+        .modal-content h2 { font-family: 'Dancing Script', cursive; color: var(--primary-dark); font-size: 2.5rem; margin-bottom: 20px; }
+        .modal-content p { color: var(--light-text); margin-bottom: 20px; }
+        .quantity-option { display: flex; align-items: center; justify-content: space-between; padding: 15px; background-color: var(--light-bg); border: 2px solid #f8bbd0; border-radius: var(--card-radius); cursor: pointer; transition: all 0.3s ease; }
+        .quantity-option:hover { transform: scale(1.03); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .quantity-option.popular { border-color: var(--primary-color); background: white; }
+        .option-details { display: flex; align-items: center; gap: 15px; }
+        .option-details i { font-size: 1.5rem; color: var(--primary-color); }
+        .option-title { font-size: 1.1rem; font-weight: 600; color: var(--dark-text); }
+        .option-badge { display: block; font-size: 0.7rem; font-weight: bold; color: var(--primary-dark); text-transform: uppercase; }
+        .option-price { font-size: 1.1rem; font-weight: 600; color: var(--primary-dark); }
+        #fileNameDisplay { text-align: center; color: var(--light-text); font-style: italic; margin-top: -5px; height: 20px; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    </style>
+</head>
+<body>
+    
+    <div id="appContainer" class="container">
+        <header>
+            <div class="logo"> <i class="fas fa-gem"></i> </div>
+            <h1>Yorgelis Te Premia</h1>
+            <p>¡Elige tus números y gana!</p>
+        </header>
+
+        <div id="step1" class="step-container active">
+            <div class="swiper-container" data-aos="fade-up"><div class="swiper-wrapper"><div class="swiper-slide"><img id="prizeImage" alt="Premio"></div></div><div class="swiper-pagination"></div></div>
+            <div class="progress-bar-container" data-aos="fade-up" data-aos-delay="100">
+                <div class="progress-bar-info"><span id="soldTicketsInfo">0 / 0</span><span id="soldPercentageInfo">0%</span></div>
+                <div class="progress-bar"><div id="progressBarFill" class="progress-bar-fill"></div></div>
+            </div>
+            <button id="startBtn" class="btn" data-aos="fade-up" data-aos-delay="300"><i class="fas fa-heart"></i> ¡Quiero Participar!</button>
+            <button id="checkTicketsBtn" class="btn btn-secondary"><i class="fas fa-search"></i> Consultar mis boletos</button>
+        </div>
+
+        <div id="step2" class="step-container">
+            <h2 class="step-title">Elige tus Boletos</h2>
+            <p style="text-align:center; margin-top:-20px; margin-bottom:20px;">Boletos a comprar: <span id="quantityToSelect" style="font-weight: bold; color: var(--primary-dark);">0</span></p>
+            <div class="ticket-selector-choice">
+                <div id="quickSelectBtn" class="choice-btn"><i class="fas fa-bolt"></i><h3>Selección Rápida</h3><p>El sistema elige por ti.</p></div>
+                <div id="manualSelectBtn" class="choice-btn"><i class="fas fa-hand-pointer"></i><h3>Elegir Manualmente</h3><p>Busca tus números.</p></div>
+            </div>
+            <div id="manualSelectionContainer">
+                <div class="manual-controls"><input type="number" id="searchNumberInput" placeholder="Busca un número específico..."></div>
+                <div id="blockSelector"></div>
+                <div id="ticketGridDisplay">
+                    <div class="grid-header">
+                        <h4 id="gridTitle"></h4>
+                        <button id="backToBlocksBtn" class="btn btn-small btn-secondary"><i class="fas fa-arrow-left"></i> Volver</button>
+                    </div>
+                    <div id="ticketGridContainer" class="ticket-grid"></div>
+                    <button id="clearSelectionBtn" class="btn btn-small btn-secondary" style="margin-top:15px;"><i class="fas fa-times"></i> Limpiar Selección</button>
+                </div>
+            </div>
+            <h2 class="step-title" style="font-size: 2.2rem; margin-top: 30px;">Completa tus Datos</h2>
+            <input type="text" id="fullName" placeholder="Nombre Completo" required>
+            <input type="text" id="idNumber" placeholder="Cédula de Identidad" required>
+            <input type="tel" id="phoneNumber" placeholder="Teléfono (WhatsApp)" required>
+            <div class="sticky-footer">
+                <div class="amount-display">Total a Pagar: <strong id="totalAmount">Bs. 0</strong></div>
+                <div class="btn-group">
+                    <button id="prevBtn2" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Atrás</button>
+                    <button id="continueToPayment" class="btn" disabled>Continuar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="step3" class="step-container">
+            <h2 class="step-title"><i class="fas fa-credit-card"></i> Realiza tu Pago</h2>
+            <div style="text-align: left; padding: 20px; background:var(--light-bg); border-radius:var(--card-radius)">
+                <p><strong>Banco:</strong> <span id="mobileBank"></span></p>
+                <p><strong>Teléfono:</strong> <span id="mobilePhone"></span></p>
+                <p><strong>Cédula:</strong> <span id="mobileId"></span></p>
+                <p><strong>Monto:</strong> <strong id="paymentAmount" style="color: var(--primary-dark);">0</strong> Bs.</p>
+            </div>
+            <label for="paymentProofInput" class="btn btn-secondary" style="margin-top:20px;"><i class="fas fa-upload"></i> Subir Comprobante</label>
+            <input type="file" id="paymentProofInput" style="display:none;" accept="image/*">
+            <p id="fileNameDisplay"></p>
+            <input type="number" id="referenceNumber" placeholder="Últimos 5 dígitos de la Referencia" maxlength="5" required>
+            <button id="whatsappBtn" class="btn" disabled><i class="fab fa-whatsapp"></i> Reportar Pago y Finalizar</button>
+            <button id="prevBtn3" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Atrás</button>
+        </div>
+
+        <div id="step4" class="step-container">
+            <div style="text-align: center; padding-top: 30px;">
+                <div class="confirmation-icon"><i class="fas fa-check-circle"></i></div>
+                <h2 class="step-title" style="font-size: 2rem;">¡Pago Reportado con Éxito!</h2>
+                <p>Tu compra está siendo procesada. Recibirás tus boletos por WhatsApp una vez que verifiquemos el pago.</p>
+                <button id="returnHomeBtn" class="btn" style="max-width: 250px; margin: 30px auto 10px;"><i class="fas fa-home"></i> Volver al Inicio</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="quantityModal" class="modal modal-hidden"></div>
+    <div id="ticketModal" class="modal modal-hidden"></div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        const CONFIG = {
+            adminWhatsApp: "584120000000",
+            supabaseUrl: "https://iqigjulbvmkokorecjie.supabase.co",
+            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxaWdqdWxidm1rb2tvcmVjamllIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzQ0MjAzNiwiZXhwIjoyMDY5MDE4MDM2fQ.F_ewIibBG7QgpSYfnUKzosl46prz7Kv_BD8-Xnrxj-c",
+            totalTickets: 10000, pricePerTicket: 80,
+            prizeImage: "https://i.ibb.co/RTbcLX0p/combo-ogra-2-0.jpg"
+        };
+        let soldTicketNumbers = new Set(), availableTickets = [], selectedTickets = [], quantityToBuy = 0;
+
+        function formatTicketNumber(number) { return String(number).padStart(4, '0'); }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            AOS.init({ once: true, duration: 800 });
+            new Swiper('.swiper-container', { pagination: { el: '.swiper-pagination' }, loop: true });
+            document.getElementById('prizeImage').src = CONFIG.prizeImage;
+            document.getElementById('mobileBank').textContent = "Banco de Venezuela";
+            document.getElementById('mobilePhone').textContent = "0412-0000000";
+            document.getElementById('mobileId').textContent = "V-12345678";
+            
+            await fetchSoldTickets();
+            setupEventListeners();
+            setupModals();
+        });
+
+        async function fetchSoldTickets() {
+            try {
+                const { data } = await fetch(`${CONFIG.supabaseUrl}/rest/v1/tickets?select=ticket_number`, { headers: { 'apikey': CONFIG.supabaseKey } }).then(res => res.json().then(data => ({data})));
+                soldTicketNumbers = new Set(data.map(t => t.ticket_number));
+                availableTickets = Array.from({ length: CONFIG.totalTickets }, (_, i) => i).filter(num => !soldTicketNumbers.has(num));
+                updateProgressBar();
+            } catch (error) { console.error("Error fetching tickets:", error); }
+        }
+
+        function updateProgressBar() {
+            const soldCount = soldTicketNumbers.size;
+            const percentage = (soldCount / CONFIG.totalTickets) * 100;
+            document.getElementById('progressBarFill').style.width = `${percentage}%`;
+            document.getElementById('soldTicketsInfo').textContent = `${soldCount.toLocaleString()} / ${CONFIG.totalTickets.toLocaleString()}`;
+            document.getElementById('soldPercentageInfo').textContent = `${percentage.toFixed(1)}%`;
+        }
+        
+        function handleSelectionChoice(type) {
+            document.getElementById('quickSelectBtn').classList.toggle('active', type === 'quick');
+            document.getElementById('manualSelectBtn').classList.toggle('active', type === 'manual');
+            const manualContainer = document.getElementById('manualSelectionContainer');
+            selectedTickets = [];
+            if (type === 'quick') {
+                manualContainer.style.display = 'none';
+                availableTickets.sort(() => 0.5 - Math.random());
+                selectedTickets = availableTickets.slice(0, quantityToBuy);
+                showTicketGridForBlock(-1, true); 
+            } else {
+                manualContainer.style.display = 'block';
+                renderBlockSelector();
+            }
+            updateTotal();
+        }
+
+        function renderBlockSelector() {
+            const selector = document.getElementById('blockSelector');
+            selector.innerHTML = '';
+            document.getElementById('ticketGridDisplay').style.display = 'none';
+            selector.style.display = 'grid';
+            for (let i = 0; i < CONFIG.totalTickets / 100; i++) {
+                const start = i * 100, end = start + 99;
+                const blockAvailable = availableTickets.filter(n => n >= start && n <= end).length;
+                const btn = document.createElement('div');
+                btn.className = 'block-btn';
+                btn.innerHTML = `<strong>${formatTicketNumber(start)}-${formatTicketNumber(end)}</strong><span>${blockAvailable} disponibles</span>`;
+                btn.onclick = () => showTicketGridForBlock(i);
+                selector.appendChild(btn);
+            }
+        }
+
+        function showTicketGridForBlock(blockIndex, showOnlySelected = false) {
+            document.getElementById('manualSelectionContainer').style.display = 'block';
+            document.getElementById('blockSelector').style.display = 'none';
+            document.getElementById('ticketGridDisplay').style.display = 'block';
+            let title = '';
+            if (showOnlySelected) {
+                title = `Tus ${quantityToBuy} Números Seleccionados`;
+            } else {
+                const start = blockIndex * 100, end = start + 99;
+                title = `Boletos del ${formatTicketNumber(start)} al ${formatTicketNumber(end)}`;
+            }
+            document.getElementById('gridTitle').textContent = title;
+            generateTicketGrid({ blockIndex, showOnlySelected });
+        }
+
+        function generateTicketGrid(filter = {}) {
+            const grid = document.getElementById('ticketGridContainer');
+            grid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">Cargando...</p>';
+            let ticketsToShow;
+            if (filter.showOnlySelected) {
+                ticketsToShow = [...selectedTickets].sort((a,b) => a-b);
+            } else if (filter.blockIndex >= 0) {
+                const start = filter.blockIndex * 100, end = start + 99;
+                ticketsToShow = availableTickets.filter(n => n >= start && n <= end);
+            } else if (filter.search) {
+                ticketsToShow = availableTickets.filter(n => formatTicketNumber(n).includes(filter.search));
+            }
+            setTimeout(() => {
+                let fragment = document.createDocumentFragment();
+                (ticketsToShow || []).slice(0, 200).forEach(num => {
+                    const numberDiv = document.createElement('div');
+                    numberDiv.className = 'ticket-grid-number';
+                    numberDiv.textContent = formatTicketNumber(num);
+                    if (selectedTickets.includes(num)) numberDiv.classList.add('selected');
+                    numberDiv.addEventListener('click', () => toggleTicket(numberDiv, num));
+                    fragment.appendChild(numberDiv);
+                });
+                grid.innerHTML = '';
+                grid.appendChild(fragment);
+            }, 10);
+        }
+        
+        function toggleTicket(element, number) {
+            const isSelected = selectedTickets.includes(number);
+            if (isSelected) {
+                selectedTickets = selectedTickets.filter(n => n !== number);
+                element.classList.remove('selected');
+            } else if (selectedTickets.length < quantityToBuy) {
+                selectedTickets.push(number);
+                element.classList.add('selected');
+            } else { alert(`Solo puedes seleccionar ${quantityToBuy} boletos.`); }
+            updateTotal();
+        }
+        
+        function updateTotal() {
+            const total = selectedTickets.length * CONFIG.pricePerTicket;
+            document.getElementById('totalAmount').textContent = `Bs. ${total.toLocaleString()}`;
+            document.getElementById('paymentAmount').textContent = total.toLocaleString();
+            document.getElementById('continueToPayment').disabled = selectedTickets.length !== quantityToBuy;
+        }
+
+        function setupEventListeners() {
+            document.getElementById('startBtn').onclick = () => {
+                document.getElementById('quantityModal').classList.remove('modal-hidden');
+            };
+            document.getElementById('checkTicketsBtn').onclick = () => document.getElementById('ticketModal').classList.remove('modal-hidden');
+            document.getElementById('quickSelectBtn').onclick = () => handleSelectionChoice('quick');
+            document.getElementById('manualSelectBtn').onclick = () => handleSelectionChoice('manual');
+            document.getElementById('searchNumberInput').addEventListener('input', (e) => {
+                document.getElementById('blockSelector').style.display = 'none';
+                document.getElementById('ticketGridDisplay').style.display = 'block';
+                document.getElementById('gridTitle').textContent = `Resultados para "${e.target.value}"`;
+                generateTicketGrid({ search: e.target.value });
+            });
+            document.getElementById('backToBlocksBtn').onclick = renderBlockSelector;
+            document.getElementById('clearSelectionBtn').onclick = () => {
+                selectedTickets = [];
+                const currentGridTitle = document.getElementById('gridTitle').textContent;
+                const isManualActive = document.getElementById('manualSelectBtn').classList.contains('active');
+                if(isManualActive) {
+                    generateTicketGrid({blockIndex: -1}); // Rerender current view
+                }
+                updateTotal();
+            };
+            document.getElementById('continueToPayment').onclick = () => goToStep(3);
+            document.getElementById('prevBtn2').onclick = () => goToStep(1);
+            document.getElementById('prevBtn3').onclick = () => goToStep(2);
+            document.getElementById('whatsappBtn').onclick = saveDataAndSend;
+            document.getElementById('returnHomeBtn').onclick = () => location.reload();
+            document.getElementById('paymentProofInput').addEventListener('change', (event) => {
+                const whatsappBtn = document.getElementById('whatsappBtn');
+                const fileNameDisplay = document.getElementById('fileNameDisplay');
+                if (event.target.files.length > 0) {
+                    fileNameDisplay.textContent = event.target.files[0].name;
+                    whatsappBtn.disabled = false;
+                } else {
+                    fileNameDisplay.textContent = '';
+                    whatsappBtn.disabled = true;
+                }
+            });
+        }
+        
+        function setupModals() {
+            const quantityModal = document.getElementById('quantityModal');
+            const popularQuantities = [2, 5, 10, 20];
+            let quantityOptionsHTML = popularQuantities.map(q => {
+                const isPopular = q === 10;
+                const price = (q * CONFIG.pricePerTicket).toLocaleString();
+                return `<div class="quantity-option ${isPopular ? 'popular' : ''}" data-quantity="${q}"><div class="option-details"><i class="fas fa-ticket-alt"></i><div><span class="option-title">${q} Boletos</span>${isPopular ? '<span class="option-badge">MÁS POPULAR</span>' : ''}</div></div><span class="option-price">Bs. ${price}</span></div>`;
+            }).join('');
+            quantityModal.innerHTML = `<div class="modal-content"><span id="closeQuantityModal" class="close-button">&times;</span><h2>Elige un Paquete</h2><p>Selecciona una de nuestras opciones.</p><div class="quantity-options-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">${quantityOptionsHTML}</div><button id="pickManuallyBtn" class="btn btn-secondary">Prefiero escribir la cantidad</button></div>`;
+            document.getElementById('closeQuantityModal').onclick = () => quantityModal.classList.add('modal-hidden');
+            document.querySelectorAll('.quantity-option').forEach(card => card.onclick = () => confirmAndProceed(parseInt(card.dataset.quantity)));
+            document.getElementById('pickManuallyBtn').onclick = () => {
+                const quantity = parseInt(prompt("Escribe la cantidad de boletos (máx 50):"));
+                confirmAndProceed(quantity);
+            };
+            const ticketModal = document.getElementById('ticketModal');
+            ticketModal.innerHTML = `<div class="modal-content"><span id="closeTicketModal" class="close-button">&times;</span><h2>Consulta tus Boletos</h2><p>Busca por Cédula o Teléfono.</p><input type="text" id="searchInput" placeholder="Ingresa tu dato aquí..."><button id="searchPurchaseBtn" class="btn">Buscar</button><div id="modalResults"></div></div>`;
+            document.getElementById('closeTicketModal').onclick = () => ticketModal.classList.add('modal-hidden');
+            document.getElementById('searchPurchaseBtn').onclick = searchPurchases;
+        }
+
+        function confirmAndProceed(quantity) {
+            if (quantity > 0 && quantity <= 50) {
+                quantityToBuy = quantity;
+                document.getElementById('quantityToSelect').textContent = quantity;
+                document.getElementById('quantityModal').classList.add('modal-hidden');
+                goToStep(2);
+                handleSelectionChoice('quick');
+            } else if (quantity) { alert("Ingresa un número entre 1 y 50."); }
+        }
+
+        function goToStep(step) {
+            document.querySelectorAll('.step-container').forEach(c => c.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+            document.getElementById('appContainer').classList.toggle('on-step-2', step === 2);
+            if (step === 4) confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+        }
+        
+        async function saveDataAndSend() {
+            const data = {
+                name: document.getElementById('fullName').value, id_number: document.getElementById('idNumber').value,
+                phone: document.getElementById('phoneNumber').value, tickets_data: selectedTickets,
+                reference: document.getElementById('referenceNumber').value, status: "PENDIENTE"
+            };
+            if (!data.name || !data.id_number || !data.phone || !data.reference) { alert("Por favor, completa todos los campos."); return; }
+            alert("Serás redirigido a WhatsApp. Por favor, no olvides adjuntar manualmente tu comprobante en el chat.");
+            await fetch(`${CONFIG.supabaseUrl}/rest/v1/transactions`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': CONFIG.supabaseKey }, body: JSON.stringify(data) });
+            const amount = selectedTickets.length * CONFIG.pricePerTicket;
+            const message = encodeURIComponent(`*NUEVO PAGO - YORGELIS TE PREMIA*\n\n*Nombre:* ${data.name}\n*Cédula:* ${data.id_number}\n*Teléfono:* ${data.phone}\n*Boletos:* ${selectedTickets.length} (${selectedTickets.map(n => formatTicketNumber(n)).join(', ')})\n*Referencia:* ${data.reference}\n*Monto:* ${amount} Bs.\n\n_Adjunto mi comprobante._`);
+            window.open(`https://wa.me/${CONFIG.adminWhatsApp}?text=${message}`, '_blank');
+            goToStep(4);
+        }
+        
+        async function searchPurchases() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            const resultsDiv = document.getElementById('modalResults');
+            if (!searchTerm) return;
+            resultsDiv.innerHTML = `<p>Buscando...</p>`;
+            const query = `or(id_number.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%)`;
+            const url = `${CONFIG.supabaseUrl}/rest/v1/transactions?${query}&select=*,tickets(ticket_number)&status=eq.VERIFICADO`;
+            const response = await fetch(url, { headers: { 'apikey': CONFIG.supabaseKey } });
+            const data = await response.json();
+            if (data.length === 0) { resultsDiv.innerHTML = `<p>No se encontraron compras verificadas con ese dato.</p>`; return; }
+            resultsDiv.innerHTML = data.map(tx => `<div class="ticket-details"><p><strong>Comprador:</strong> ${tx.name}</p><div class="tickets-grid">${tx.tickets.map(t => `<div class="ticket-item">${formatTicketNumber(t.ticket_number)}</div>`).join('')}</div></div>`).join('');
+        }
+    </script>
+</body>
+</html>
