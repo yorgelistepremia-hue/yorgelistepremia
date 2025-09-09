@@ -105,7 +105,7 @@
         const CONFIG = {
             supabaseUrl: "https://ubgpfgazgaotnhqieaew.supabase.co",
             supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZ3BmZ2F6Z2FvdG5ocWllYWV3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzM3MjU3MSwiZXhwIjoyMDcyOTQ4NTcxfQ.XQbFxWt9rjm_lEDaSY0R-6FRQJs8Dv8SPtxSjIclW3Q",
-            pricePerTicket: 80 // Asegúrate que el precio sea correcto
+            pricePerTicket: 80
         };
         
         function formatTicketNumber(number) { return String(number).padStart(4, '0'); }
@@ -113,7 +113,7 @@
         async function loadTransactions() {
             const searchTerm = document.getElementById('searchInput').value.trim();
             const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
-            let query = `transactions?select=*&order=created_at.desc`;
+            let query = `transactions?select=*,tickets(ticket_number)&order=created_at.desc`;
             if (activeFilter !== 'all') { query += `&status=eq.${activeFilter}`; }
             if (searchTerm) { query += `&or=(name.ilike.%${searchTerm}%,id_number.ilike.%${searchTerm}%,reference.ilike.%${searchTerm}%)`; }
 
@@ -121,61 +121,58 @@
                 const response = await fetch(`${CONFIG.supabaseUrl}/rest/v1/${query}`, { headers: { 'apikey': CONFIG.supabaseKey } });
                 const transactions = await response.json();
                 renderTable(transactions);
-                updateStats(transactions);
+                updateStats(transactions); // <-- ESTA LÍNEA ES LA CORRECCIÓN CLAVE
             } catch (error) { console.error("Error cargando transacciones:", error); }
         }
 
         function renderTable(transactions) {
             const tbody = document.querySelector("#transactionsTable tbody");
-            tbody.innerHTML = transactions.map(tx => `
-                <tr>
-                    <td>${new Date(tx.created_at).toLocaleString()}</td>
-                    <td>${tx.name}<br><small>${tx.id_number}</small></td>
-                    <td>${tx.phone}</td>
-                    <td><b>${tx.tickets_data.length} boletos:</b> ${tx.tickets_data.map(formatTicketNumber).join(', ')}</td>
-                    <td>${tx.reference}</td>
-                    <td>${tx.status}</td>
-                    <td>
-                        ${tx.status === 'PENDIENTE' ? `<button class="btn-verify" onclick="verifyPayment(${tx.id}, '${JSON.stringify(tx.tickets_data)}', '${tx.name}', '${tx.phone}')"><i class="fas fa-check"></i> Verificar</button>` : `<button onclick="viewTickets(${tx.id})"><i class="fas fa-eye"></i> Ver Boletos</button>`}
-                        <button class="btn-delete" onclick="deleteTransaction(${tx.id})"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = transactions.map(tx => {
+                const ticketsDisplay = tx.tickets_data ? `<b>${tx.tickets_data.length} boletos:</b> ${tx.tickets_data.map(formatTicketNumber).join(', ')}` : 'N/A';
+                return `
+                    <tr>
+                        <td>${new Date(tx.created_at).toLocaleString()}</td>
+                        <td>${tx.name}<br><small>${tx.id_number}</small></td>
+                        <td>${tx.phone}</td>
+                        <td>${ticketsDisplay}</td>
+                        <td>${tx.reference}</td>
+                        <td>${tx.status}</td>
+                        <td>
+                            ${tx.status === 'PENDIENTE' ? `<button class="btn-verify" onclick="verifyPayment(${tx.id}, '${JSON.stringify(tx.tickets_data)}', '${tx.name}', '${tx.phone}')"><i class="fas fa-check"></i> Verificar</button>` : `<button onclick="viewTickets(${tx.id})"><i class="fas fa-eye"></i> Ver Boletos</button>`}
+                            <button class="btn-delete" onclick="deleteTransaction(${tx.id})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
             if (transactions.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No se encontraron transacciones.</td></tr>`; }
         }
         
         async function verifyPayment(transactionId, ticketsDataString, name, phone) {
             if (!confirm("¿Confirmas que el pago es correcto? Se asignarán los boletos y se preparará el mensaje de WhatsApp.")) return;
-            
-            const tickets_data = JSON.parse(ticketsDataString);
-            
-            // 1. Comprobar si algún boleto ya fue vendido
+            const tickets_data = JSON.parse(ticketsDataString || '[]');
+            if (tickets_data.length === 0) {
+                alert("Error: No hay boletos seleccionados en esta transacción.");
+                return;
+            }
             const checkResponse = await fetch(`${CONFIG.supabaseUrl}/rest/v1/tickets?ticket_number=in.(${tickets_data.join(',')})`, { headers: { 'apikey': CONFIG.supabaseKey } });
             const existingTickets = await checkResponse.json();
             if (existingTickets.length > 0) {
-                alert(`Error: Los siguientes boletos ya están vendidos: ${existingTickets.map(t => formatTicketNumber(t.ticket_number)).join(', ')}. Por favor, elimina esta transacción y pide al cliente que elija nuevos números.`);
+                alert(`Error: Los siguientes boletos ya están vendidos: ${existingTickets.map(t => formatTicketNumber(t.ticket_number)).join(', ')}. Elimina esta transacción.`);
                 return;
             }
-
-            // 2. Si no hay conflictos, insertar los nuevos boletos
             const ticketsToInsert = tickets_data.map(num => ({ transaction_id: transactionId, ticket_number: num }));
             await fetch(`${CONFIG.supabaseUrl}/rest/v1/tickets`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': CONFIG.supabaseKey }, body: JSON.stringify(ticketsToInsert) });
-            
-            // 3. Actualizar el estado de la transacción a VERIFICADO
             await fetch(`${CONFIG.supabaseUrl}/rest/v1/transactions?id=eq.${transactionId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'apikey': CONFIG.supabaseKey }, body: JSON.stringify({ status: 'VERIFICADO' }) });
-            
             alert('¡Pago verificado y boletos asignados!');
-            
-            // 4. Preparar y abrir WhatsApp
             const ticketList = tickets_data.map(formatTicketNumber).join(', ');
             const message = encodeURIComponent(`¡Hola ${name}! 👋 Gracias por participar en la rifa de Yorgelis Te Premia.\n\nAquí tienes tus números de la suerte:\n🎟️ *${ticketList}*\n\n¡Te deseamos muchísima suerte! 💖`);
             window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-            
             loadTransactions();
         }
 
         async function viewTickets(transactionId) {
-            const { data: tickets } = await fetch(`${CONFIG.supabaseUrl}/rest/v1/tickets?transaction_id=eq.${transactionId}`, { headers: { 'apikey': CONFIG.supabaseKey } }).then(res => res.json());
+            const response = await fetch(`${CONFIG.supabaseUrl}/rest/v1/tickets?transaction_id=eq.${transactionId}`, { headers: { 'apikey': CONFIG.supabaseKey } });
+            const tickets = await response.json();
             const modalBody = document.getElementById('modalBody');
             modalBody.innerHTML = tickets.map(t => `<div style="background:#eee; padding:5px 10px; border-radius:5px;">${formatTicketNumber(t.ticket_number)}</div>`).join('');
             document.getElementById('ticketsModal').style.display = 'block';
@@ -188,10 +185,72 @@
             }
         }
 
-        function updateStats(transactions) { /* ... sin cambios ... */ }
-        async function performRaffle() { /* ... sin cambios ... */ }
-        async function exportToCSV() { /* ... sin cambios ... */ }
+        function updateStats(transactions) {
+            let soldTicketsCount = 0;
+            const buyerCounts = {};
+            let totalSales = 0;
+            
+            const verifiedTransactions = transactions.filter(t => t.status === 'VERIFICADO');
+            verifiedTransactions.forEach(tx => {
+                if (tx.tickets_data && tx.tickets_data.length > 0) {
+                    totalSales += tx.tickets_data.length * CONFIG.pricePerTicket;
+                    const buyerId = tx.id_number || tx.name;
+                    if (!buyerCounts[buyerId]) {
+                        buyerCounts[buyerId] = { name: tx.name, count: 0 };
+                    }
+                    buyerCounts[buyerId].count += tx.tickets_data.length;
+                }
+                // Los boletos vendidos se cuentan desde la tabla 'tickets' asociada
+                if(tx.tickets && tx.tickets.length > 0) {
+                    soldTicketsCount += tx.tickets.length;
+                }
+            });
+            
+            let topBuyer = { name: "--", count: 0 };
+            for (const id in buyerCounts) {
+                if (buyerCounts[id].count > topBuyer.count) {
+                    topBuyer = buyerCounts[id];
+                }
+            }
+
+            document.getElementById('topBuyerName').textContent = topBuyer.name;
+            document.getElementById('topBuyerCount').textContent = `${topBuyer.count} boletos`;
+            document.getElementById('soldTickets').textContent = transactions.reduce((acc, tx) => acc + (tx.tickets ? tx.tickets.length : 0), 0).toLocaleString();
+            document.getElementById('pendingCount').textContent = transactions.filter(t => t.status === 'PENDIENTE').length;
+            document.getElementById('totalSales').textContent = `Bs. ${totalSales.toLocaleString()}`;
+        }
         
+        async function performRaffle() {
+            if (!confirm("¿Realizar el sorteo? Se elegirá un ganador de todos los boletos verificados.")) return;
+            const response = await fetch(`${CONFIG.supabaseUrl}/rest/v1/tickets?select=ticket_number,transactions(name,phone)`, { headers: { 'apikey': CONFIG.supabaseKey } });
+            const allTickets = await response.json();
+            if (allTickets.length === 0) { alert("No hay boletos verificados para sortear."); return; }
+            const winner = allTickets[Math.floor(Math.random() * allTickets.length)];
+            document.getElementById('winnerTicket').textContent = formatTicketNumber(winner.ticket_number);
+            document.getElementById('winnerName').textContent = winner.transactions.name;
+            document.getElementById('winnerPhone').textContent = winner.transactions.phone;
+            document.getElementById('winnerResult').style.display = 'block';
+            confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
+        }
+        
+        async function exportToCSV() {
+            const response = await fetch(`${CONFIG.supabaseUrl}/rest/v1/transactions?status=eq.VERIFICADO&select=name,id_number,phone,tickets(ticket_number)`, { headers: { 'apikey': CONFIG.supabaseKey } });
+            const data = await response.json();
+            let csvContent = "data:text/csv;charset=utf-8,Nombre,Cedula,Telefono,Numero de Boleto\n";
+            data.forEach(tx => {
+                tx.tickets.forEach(ticket => {
+                    csvContent += [tx.name, tx.id_number, tx.phone, formatTicketNumber(ticket.ticket_number)].join(",") + "\n";
+                });
+            });
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", "participantes_rifa.csv");
+            link.click();
+        }
+
+        document.addEventListener('DOMContentLoaded', loadTransactions);
+        document.getElementById('raffleBtn').addEventListener('click', performRaffle);
+        document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
         document.querySelectorAll('.filter-btn').forEach(btn => btn.onclick = () => {
             document.querySelector('.filter-btn.active').classList.remove('active');
             btn.classList.add('active');
@@ -200,8 +259,6 @@
         const modal = document.getElementById('ticketsModal');
         document.querySelector('.close-button').onclick = () => modal.style.display = 'none';
         window.onclick = (event) => { if (event.target == modal) modal.style.display = 'none'; };
-
-        document.addEventListener('DOMContentLoaded', loadTransactions);
     </script>
 </body>
 </html>
