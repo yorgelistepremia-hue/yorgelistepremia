@@ -71,6 +71,16 @@
         .modal.visible { opacity: 1; visibility: visible; }
         .modal-content { background-color: #fefefe; padding: 25px; width: 90%; max-width: 400px; border-radius: var(--border-radius); animation: fadeIn 0.5s; text-align: center; }
         .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; margin-top: -15px; }
+        .modal-content h2 { font-family: 'Dancing Script', cursive; color: var(--primary-dark); font-size: 2.5rem; margin-bottom: 20px; }
+        .modal-content p { color: var(--light-text); margin-bottom: 20px; }
+        .quantity-option { display: flex; align-items: center; justify-content: space-between; padding: 15px; background-color: var(--light-bg); border: 2px solid #f8bbd0; border-radius: var(--card-radius); cursor: pointer; transition: all 0.3s ease; }
+        .quantity-option:hover { transform: scale(1.03); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .quantity-option.popular { border-color: var(--primary-color); background: white; }
+        .option-details { display: flex; align-items: center; gap: 15px; text-align: left;}
+        .option-details i { font-size: 1.5rem; color: var(--primary-color); }
+        .option-title { font-size: 1.1rem; font-weight: 600; color: var(--dark-text); }
+        .option-badge { display: block; font-size: 0.7rem; font-weight: bold; color: var(--primary-dark); text-transform: uppercase; }
+        .option-price { font-size: 1.1rem; font-weight: 600; color: var(--primary-dark); }
         #fileNameDisplay { text-align: center; color: var(--light-text); font-style: italic; margin-top: -5px; height: 20px; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .ticket-item { background: var(--light-bg); border-radius: 10px; padding: 8px 12px; font-weight: bold; text-align: center; }
         .ticket-details { background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -159,7 +169,8 @@
             <span id="closeQuantityModal" class="close-button">&times;</span>
             <h2 style="font-family: 'Dancing Script', cursive; color: var(--primary-dark); font-size: 2.5rem;">Elige un Paquete</h2>
             <p style="color: var(--light-text); margin-bottom: 20px;">Selecciona una de nuestras opciones.</p>
-            <div id="quantityOptionsList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;"></div>
+            <div id="quantityOptionsList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+                </div>
             <button id="pickManuallyBtn" class="btn btn-secondary">Prefiero escribir la cantidad</button>
         </div>
     </div>
@@ -189,8 +200,8 @@
     
     <script>
         const CONFIG = {
-            supabaseUrl: "Thttps://ubgpfgazgaotnhqieaew.supabase.co",
-            supabaseKey: "TeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZ3BmZ2F6Z2FvdG5ocWllYWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNzI1NzEsImV4cCI6MjA3Mjk0ODU3MX0.v0FZj87h2VGhB8S_TazRLuy-4um0XiMDVotdredoN7s",
+            supabaseUrl: "https://ubgpfgazgaotnhqieaew.supabase.co",
+            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZ3BmZ2F6Z2FvdG5ocWllYWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNzI1NzEsImV4cCI6MjA3Mjk0ODU3MX0.v0FZj87h2VGhB8S_TazRLuy-4um0XiMDVotdredoN7s",
             adminWhatsApp: "584120000000",
             totalTickets: 10000, 
             pricePerTicket: 80,
@@ -201,7 +212,7 @@
 
         function formatTicketNumber(number) { return String(number).padStart(4, '0'); }
 
-        function init() {
+        document.addEventListener('DOMContentLoaded', async () => {
             AOS.init({ once: true, duration: 800 });
             new Swiper('.swiper-container', { pagination: { el: '.swiper-pagination' }, loop: true });
             document.getElementById('prizeImage').src = CONFIG.prizeImage;
@@ -209,10 +220,10 @@
             document.getElementById('mobilePhone').textContent = "0412-0000000";
             document.getElementById('mobileId').textContent = "V-12345678";
             
-            fetchSoldTickets();
+            await fetchSoldTickets();
             setupEventListeners();
             setupModals();
-        }
+        });
 
         async function fetchSoldTickets() {
             try {
@@ -379,7 +390,6 @@
                 return `<div class="quantity-option ${isPopular ? 'popular' : ''}" data-quantity="${q}"><div class="option-details"><i class="fas fa-ticket-alt"></i><div><span class="option-title">${q} Boletos</span>${isPopular ? '<span class="option-badge">MÁS POPULAR</span>' : ''}</div></div><span class="option-price">Bs. ${price}</span></div>`;
             }).join('');
             quantityModal.querySelector('#quantityOptionsList').innerHTML = quantityOptionsHTML;
-            
             document.getElementById('closeQuantityModal').onclick = () => quantityModal.classList.remove('visible');
             quantityModal.querySelectorAll('.quantity-option').forEach(card => card.onclick = () => confirmAndProceed(parseInt(card.dataset.quantity)));
             document.getElementById('pickManuallyBtn').onclick = () => {
@@ -463,5 +473,6 @@
     </script>
 </body>
 </html>
+
 
 
