@@ -163,9 +163,34 @@
         </div>
     </div>
 
-    <div id="quantityModal" class="modal"></div>
-    <div id="manualQuantityModal" class="modal"></div>
-    <div id="ticketModal" class="modal"></div>
+    <div id="quantityModal" class="modal">
+        <div class="modal-content">
+            <span id="closeQuantityModal" class="close-button">&times;</span>
+            <h2>Elige un Paquete</h2>
+            <p>Selecciona una de nuestras opciones.</p>
+            <div id="quantityOptionsList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;"></div>
+            <button id="pickManuallyBtn" class="btn btn-secondary">Prefiero escribir la cantidad</button>
+        </div>
+    </div>
+    <div id="manualQuantityModal" class="modal">
+         <div class="modal-content">
+            <span id="closeManualQuantityModal" class="close-button">&times;</span>
+            <h2>Otra Cantidad</h2>
+            <p id="manualQtySubtitle"></p>
+            <input type="number" id="manualQuantityInput" placeholder="Ej: 3">
+            <button id="confirmManualQuantityBtn" class="btn">Confirmar</button>
+        </div>
+    </div>
+    <div id="ticketModal" class="modal">
+        <div class="modal-content">
+            <span id="closeTicketModal" class="close-button">&times;</span>
+            <h2>Consulta tus Boletos</h2>
+            <p>Busca por Cédula o Teléfono.</p>
+            <input type="text" id="searchInput" placeholder="Ingresa tu dato aquí...">
+            <button id="searchPurchaseBtn" class="btn">Buscar</button>
+            <div id="modalResults"></div>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
@@ -173,8 +198,8 @@
     
     <script>
         const CONFIG = {
-            supabaseUrl: "https://ubgpfgazgaotnhqieaew.supabase.co",
-            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZ3BmZ2F6Z2FvdG5ocWllYWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNzI1NzEsImV4cCI6MjA3Mjk0ODU3MX0.v0FZj87h2VGhB8S_TazRLuy-4um0XiMDVotdredoN7s", // <-- ¡USA LA LLAVE PÚBLICA (ANON) AQUÍ!
+            supabaseUrl: "TU_URL_DE_SUPABASE",
+            supabaseKey: "TU_LLAVE_PÚBLICA_ANON",
             adminWhatsApp: "584120000000",
             totalTickets: 10000, 
             pricePerTicket: 80,
@@ -356,30 +381,26 @@
             const quantityModal = document.getElementById('quantityModal');
             const manualQuantityModal = document.getElementById('manualQuantityModal');
             const ticketModal = document.getElementById('ticketModal');
-            
             const popularQuantities = [2, 5, 10, 20];
             let quantityOptionsHTML = popularQuantities.map(q => {
                 const isPopular = q === 10;
                 const price = (q * CONFIG.pricePerTicket).toLocaleString();
                 return `<div class="quantity-option ${isPopular ? 'popular' : ''}" data-quantity="${q}"><div class="option-details"><i class="fas fa-ticket-alt"></i><div><span class="option-title">${q} Boletos</span>${isPopular ? '<span class="option-badge">MÁS POPULAR</span>' : ''}</div></div><span class="option-price">Bs. ${price}</span></div>`;
             }).join('');
-            
-            quantityModal.innerHTML = `<div class="modal-content"><span class="close-button">&times;</span><h2>Elige un Paquete</h2><p>Selecciona una de nuestras opciones.</p><div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">${quantityOptionsHTML}</div><button class="btn btn-secondary">Prefiero escribir la cantidad</button></div>`;
-            manualQuantityModal.innerHTML = `<div class="modal-content"><span class="close-button">&times;</span><h2>Otra Cantidad</h2><p>Escribe cuántos boletos quieres (máx ${CONFIG.maxTicketsPerPurchase}).</p><input type="number" id="manualQuantityInput" placeholder="Ej: 3"><button class="btn">Confirmar</button></div>`;
-            ticketModal.innerHTML = `<div class="modal-content"><span class="close-button">&times;</span><h2>Consulta tus Boletos</h2><p>Busca por Cédula o Teléfono.</p><input type="text" id="searchInput" placeholder="Ingresa tu dato aquí..."><button class="btn">Buscar</button><div id="modalResults"></div></div>`;
-            
-            quantityModal.querySelector('.close-button').onclick = () => quantityModal.classList.remove('visible');
-            quantityModal.querySelectorAll('.quantity-option').forEach(card => card.onclick = () => confirmAndProceed(parseInt(card.dataset.quantity)));
-            quantityModal.querySelector('.btn-secondary').onclick = () => {
+            quantityModal.querySelector('.modal-content').innerHTML = `<span id="closeQuantityModal" class="close-button">&times;</span><h2>Elige un Paquete</h2><p>Selecciona una de nuestras opciones.</p><div id="quantityOptionsList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">${quantityOptionsHTML}</div><button id="pickManuallyBtn" class="btn btn-secondary">Prefiero escribir la cantidad</button>`;
+            document.getElementById('closeQuantityModal').onclick = () => quantityModal.classList.remove('visible');
+            document.querySelectorAll('.quantity-option').forEach(card => card.onclick = () => confirmAndProceed(parseInt(card.dataset.quantity)));
+            document.getElementById('pickManuallyBtn').onclick = () => {
                 quantityModal.classList.remove('visible');
                 manualQuantityModal.classList.add('visible');
-                manualQuantityModal.querySelector('input').value = '';
-                manualQuantityModal.querySelector('input').focus();
+                document.getElementById('manualQuantityInput').value = '';
+                document.getElementById('manualQuantityInput').focus();
             };
-            manualQuantityModal.querySelector('.close-button').onclick = () => manualQuantityModal.classList.remove('visible');
-            manualQuantityModal.querySelector('.btn').onclick = () => confirmAndProceed(parseInt(manualQuantityModal.querySelector('input').value));
-            ticketModal.querySelector('.close-button').onclick = () => ticketModal.classList.remove('visible');
-            ticketModal.querySelector('.btn').onclick = searchPurchases;
+            document.getElementById('manualQtySubtitle').textContent = `Escribe cuántos boletos quieres (máx ${CONFIG.maxTicketsPerPurchase}).`;
+            document.getElementById('closeManualQuantityModal').onclick = () => manualQuantityModal.classList.remove('visible');
+            document.getElementById('confirmManualQuantityBtn').onclick = () => confirmAndProceed(parseInt(document.getElementById('manualQuantityInput').value));
+            document.getElementById('closeTicketModal').onclick = () => ticketModal.classList.remove('visible');
+            document.getElementById('searchPurchaseBtn').onclick = searchPurchases;
         }
 
         function confirmAndProceed(quantity) {
@@ -430,13 +451,17 @@
             if (!searchTerm) return;
             resultsDiv.innerHTML = `<p>Buscando...</p>`;
             try {
-                const query = `or(id_number.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%)`;
-                const url = `${CONFIG.supabaseUrl}/rest/v1/transactions?${query}&select=id,name,tickets(ticket_number)&status=eq.VERIFICADO`;
-                const response = await fetch(url, { headers: { 'apikey': CONFIG.supabaseKey, 'Authorization': `Bearer ${CONFIG.supabaseKey}` } });
-                if (!response.ok) { throw new Error(`Error de conexión: ${response.statusText}. Verifica tus llaves API.`); }
+                const response = await fetch(`${CONFIG.supabaseUrl}/rest/v1/rpc/buscar_boletos`, {
+                    method: 'POST',
+                    headers: { 'apikey': CONFIG.supabaseKey, 'Authorization': `Bearer ${CONFIG.supabaseKey}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ termino_busqueda: searchTerm })
+                });
+                if (!response.ok) { throw new Error(`Error de conexión: ${response.statusText}.`); }
                 const data = await response.json();
                 if (data.length === 0) { resultsDiv.innerHTML = `<p>No se encontraron compras verificadas con ese dato.</p>`; return; }
-                resultsDiv.innerHTML = data.map(tx => `<div class="ticket-details" style="text-align:left;"><p><strong>Comprador:</strong> ${tx.name}</p><div class="tickets-grid" style="margin-top:10px;">${tx.tickets.map(t => `<div class="ticket-item">${formatTicketNumber(t.ticket_number)}</div>`).join('')}</div></div>`).join('');
+                resultsDiv.innerHTML = data.map(tx => {
+                    return `<div class="ticket-details" style="text-align:left;"><p><strong>Comprador:</strong> ${tx.nombre}</p><div class="tickets-grid" style="margin-top:10px;">${tx.numeros_boleto.map(t => `<div class="ticket-item">${formatTicketNumber(t)}</div>`).join('')}</div></div>`;
+                }).join('');
             } catch (error) {
                 console.error('Error en la búsqueda:', error);
                 alert(`Error al buscar: ${error.message}`);
