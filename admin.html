@@ -104,11 +104,23 @@
     <script>
         const CONFIG = {
             supabaseUrl: "https://ubgpfgazgaotnhqieaew.supabase.co",
-            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZ3BmZ2F6Z2FvdG5ocWllYWV3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzM3MjU3MSwiZXhwIjoyMDcyOTQ8NTcxfQ.XQbFxWt9rjm_lEDaSY0R-6FRQJs8Dv8SPtxSjIclW3Q",
+            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZ3BmZ2F6Z2FvdG5ocWllYWV3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzM3MjU3MSwiZXhwIjoyMDcyOTQ4NTcxfQ.XQbFxWt9rjm_lEDaSY0R-6FRQJs8Dv8SPtxSjIclW3Q",
             pricePerTicket: 80
         };
         
         function formatTicketNumber(number) { return String(number).padStart(4, '0'); }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Fecha no disponible';
+            try {
+                return new Date(dateString).toLocaleString('es-VE', {
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit', hour12: true
+                });
+            } catch (error) {
+                return 'Fecha inválida';
+            }
+        }
 
         async function loadTransactions() {
             const searchTerm = document.getElementById('searchInput').value.trim();
@@ -130,7 +142,6 @@
             tbody.innerHTML = transactions.map(tx => {
                 const ticketsDisplay = tx.tickets_data ? `<b>${tx.tickets_data.length} boletos:</b> ${tx.tickets_data.map(formatTicketNumber).join(', ')}` : 'N/A';
                 
-                // Define los botones según el estado de la transacción
                 let actionButtons = '';
                 if (tx.status === 'PENDIENTE') {
                     actionButtons = `
@@ -145,7 +156,7 @@
 
                 return `
                     <tr>
-                        <td>${new Date(tx.created_at).toLocaleString('es-VE', { hour12: true, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+                        <td>${formatDate(tx.created_at)}</td>
                         <td>${tx.name}<br><small>${tx.id_number}</small></td>
                         <td>${tx.phone}</td>
                         <td>${ticketsDisplay}</td>
@@ -192,7 +203,6 @@
             if (!confirm(`¿Quieres reenviar los boletos a ${name} por WhatsApp?`)) return;
 
             try {
-                // Busca los números de boleto asociados a esa transacción
                 const response = await fetch(`${CONFIG.supabaseUrl}/rest/v1/tickets?select=ticket_number&transaction_id=eq.${transactionId}`, { 
                     headers: { 'apikey': CONFIG.supabaseKey } 
                 });
@@ -207,7 +217,6 @@
                 const ticketList = tickets.map(t => formatTicketNumber(t.ticket_number)).join(', ');
                 const message = encodeURIComponent(`¡Hola ${name}! 👋 Aquí tienes nuevamente tus números de la suerte para la rifa de Yorgelis Te Premia:\n\n🎟️ *${ticketList}*\n\n¡Mucha suerte! 💖`);
                 
-                // Redirige a WhatsApp
                 window.location.href = `https://wa.me/${phone}?text=${message}`;
 
             } catch (error) {
@@ -238,7 +247,6 @@
             const verifiedTransactions = transactions.filter(t => t.status === 'VERIFICADO');
             verifiedTransactions.forEach(tx => {
                 if (tx.tickets_data && tx.tickets_data.length > 0) {
-                    // Calcula las ventas totales solo de transacciones verificadas
                     totalSales += tx.tickets_data.length * CONFIG.pricePerTicket;
                     const buyerId = tx.id_number || tx.name;
                     if (!buyerCounts[buyerId]) {
@@ -306,3 +314,4 @@
     </script>
 </body>
 </html>
+
