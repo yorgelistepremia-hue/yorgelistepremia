@@ -29,7 +29,7 @@
         .stat-label { color: #6c757d; font-size: 16px; font-weight: 500; }
         .controls { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #fce4ec; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #fce4ec; vertical-align: middle; }
         thead { background: linear-gradient(to right, var(--primary-dark), var(--primary-color)); color: white; }
         tbody tr:hover { background-color: #fce4ec; }
         button { background-color: var(--primary-color); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s ease; }
@@ -158,8 +158,13 @@
                     <tr>
                         <td>${formatDate(tx.created_at)}</td>
                         <td>${tx.name}<br><small>${tx.id_number}</small></td>
-                        <td>${tx.phone}</td>
-                        <td>${ticketsDisplay}</td>
+                        <td><a href="https://wa.me/${tx.phone}" target="_blank" style="color: var(--primary-dark); text-decoration: none;">${tx.phone}</a></td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span>${ticketsDisplay}</span>
+                                <button title="Copiar mensaje de confirmación" style="background: #6c757d; flex-shrink: 0;" onclick="copyConfirmationMessage('${tx.name}', '${JSON.stringify(tx.tickets_data)}')"><i class="fas fa-copy"></i></button>
+                            </div>
+                        </td>
                         <td>${tx.reference}</td>
                         <td>${tx.status}</td>
                         <td>
@@ -174,6 +179,24 @@
             if (transactions.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No se encontraron transacciones.</td></tr>`; }
         }
         
+        function copyConfirmationMessage(name, ticketsDataString) {
+            const tickets_data = JSON.parse(ticketsDataString || '[]');
+            if (tickets_data.length === 0) {
+                alert("No hay boletos para copiar en esta transacción.");
+                return;
+            }
+
+            const ticketList = tickets_data.map(t => formatTicketNumber(t)).join(', ');
+            const message = `¡Hola ${name}! 👋 Gracias por participar en la rifa de Yorgelis Te Premia.\n\nAquí tienes tus números de la suerte:\n🎟️ *${ticketList}*\n\n¡Te deseamos muchísima suerte! 💖`;
+
+            navigator.clipboard.writeText(message).then(() => {
+                alert("¡Mensaje de confirmación copiado al portapapeles!");
+            }).catch(err => {
+                console.error('Error al copiar el mensaje: ', err);
+                alert("No se pudo copiar el mensaje.");
+            });
+        }
+
         async function verifyPayment(transactionId, ticketsDataString, name, phone) {
             if (!confirm("¿Confirmas que el pago es correcto? Se asignarán los boletos y se preparará el mensaje de WhatsApp.")) return;
             const tickets_data = JSON.parse(ticketsDataString || '[]');
@@ -314,4 +337,3 @@
     </script>
 </body>
 </html>
-
