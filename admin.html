@@ -163,11 +163,15 @@
             const ticketsToInsert = tickets_data.map(num => ({ transaction_id: transactionId, ticket_number: num }));
             await fetch(`${CONFIG.supabaseUrl}/rest/v1/tickets`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': CONFIG.supabaseKey }, body: JSON.stringify(ticketsToInsert) });
             await fetch(`${CONFIG.supabaseUrl}/rest/v1/transactions?id=eq.${transactionId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'apikey': CONFIG.supabaseKey }, body: JSON.stringify({ status: 'VERIFICADO' }) });
-            alert('¡Pago verificado y boletos asignados!');
+            
+            alert('¡Pago verificado y boletos asignados! Serás redirigido a WhatsApp.');
+
             const ticketList = tickets_data.map(formatTicketNumber).join(', ');
             const message = encodeURIComponent(`¡Hola ${name}! 👋 Gracias por participar en la rifa de Yorgelis Te Premia.\n\nAquí tienes tus números de la suerte:\n🎟️ *${ticketList}*\n\n¡Te deseamos muchísima suerte! 💖`);
-            window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-            loadTransactions();
+            
+            // --- CAMBIO PRINCIPAL ---
+            // Cambia la página actual a la URL de WhatsApp en lugar de abrir una nueva.
+            window.location.href = `https://wa.me/${phone}?text=${message}`;
         }
 
         async function viewTickets(transactionId) {
