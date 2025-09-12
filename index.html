@@ -140,17 +140,14 @@
 
         <div id="step3" class="step-container">
             <h2 class="step-title"><i class="fas fa-credit-card"></i> Realiza tu Pago</h2>
-            <div style="text-align: left; padding: 20px; background:var(--light-bg); border-radius:var(--card-radius)">
+            <div style="text-align: left; padding: 20px; background:var(--light-bg); border-radius:var(--card-radius); margin-bottom: 20px;">
                 <p><strong>Banco:</strong> <span id="mobileBank"></span></p>
                 <p><strong>Teléfono:</strong> <span id="mobilePhone"></span></p>
                 <p><strong>Cédula:</strong> <span id="mobileId"></span></p>
                 <p><strong>Monto:</strong> <strong id="paymentAmount" style="color: var(--primary-dark);">0</strong> Bs.</p>
             </div>
-            <label for="paymentProofInput" class="btn btn-secondary" style="margin-top:20px;"><i class="fas fa-upload"></i> Subir Comprobante</label>
-            <input type="file" id="paymentProofInput" style="display:none;" accept="image/*">
-            <p id="fileNameDisplay"></p>
-            <input type="number" id="referenceNumber" placeholder="Últimos 5 dígitos de la Referencia" maxlength="5" required>
-            <button id="whatsappBtn" class="btn" disabled><i class="fab fa-whatsapp"></i> Reportar Pago y Finalizar</button>
+            <input type="number" id="referenceNumber" placeholder="Número de Referencia del Pago Móvil" required>
+            <button id="whatsappBtn" class="btn"><i class="fab fa-whatsapp"></i> Reportar Pago y Finalizar</button>
             <button id="prevBtn3" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Atrás</button>
         </div>
 
@@ -205,6 +202,11 @@
             adminWhatsApp: "584129058819",
             totalTickets: 10000, 
             pricePerTicket: 70,
+            // --- CONFIGURACIÓN DE PAGO MÓVIL ---
+            mobilePaymentBank: "Banco de Venezuela",
+            mobilePaymentPhone: "0412-91941580",
+            mobilePaymentId: "V-27549307",
+            // --- FIN CONFIGURACIÓN ---
             prizeImage: "https://i.ibb.co/TDPDdqH2/photo-5053581550268035376-y.jpg",
             maxTicketsPerPurchase: 100
         };
@@ -216,9 +218,11 @@
             AOS.init({ once: true, duration: 800 });
             new Swiper('.swiper-container', { pagination: { el: '.swiper-pagination' }, loop: true });
             document.getElementById('prizeImage').src = CONFIG.prizeImage;
-            document.getElementById('mobileBank').textContent = "Banco de Venezuela";
-            document.getElementById('mobilePhone').textContent = "0412-9194158";
-            document.getElementById('mobileId').textContent = "V-27549307";
+            
+            // Asigna los datos del pago móvil desde la configuración
+            document.getElementById('mobileBank').textContent = CONFIG.mobilePaymentBank;
+            document.getElementById('mobilePhone').textContent = CONFIG.mobilePaymentPhone;
+            document.getElementById('mobileId').textContent = CONFIG.mobilePaymentId;
             
             await fetchSoldTickets();
             setupEventListeners();
@@ -227,10 +231,8 @@
 
         async function fetchSoldTickets() {
             try {
-                // --- CAMBIO PRINCIPAL ---
-                // Llamamos a la nueva función que obtiene boletos vendidos Y pendientes
                 const response = await fetch(`${CONFIG.supabaseUrl}/rest/v1/rpc/get_unavailable_tickets`, {
-                    method: 'POST', // Los RPC se llaman con POST
+                    method: 'POST',
                     headers: { 'apikey': CONFIG.supabaseKey }
                 });
 
@@ -238,7 +240,6 @@
                 
                 const data = await response.json();
                 
-                // El resto de la función sigue igual
                 soldTicketNumbers = new Set(data.map(t => t.ticket_number));
                 availableTickets = Array.from({ length: CONFIG.totalTickets }, (_, i) => i).filter(num => !soldTicketNumbers.has(num));
                 updateProgressBar();
@@ -375,17 +376,6 @@
             document.getElementById('prevBtn3').onclick = () => goToStep(2);
             document.getElementById('whatsappBtn').onclick = saveDataAndSend;
             document.getElementById('returnHomeBtn').onclick = () => location.reload();
-            document.getElementById('paymentProofInput').addEventListener('change', (event) => {
-                const whatsappBtn = document.getElementById('whatsappBtn');
-                const fileNameDisplay = document.getElementById('fileNameDisplay');
-                if (event.target.files.length > 0) {
-                    fileNameDisplay.textContent = event.target.files[0].name;
-                    whatsappBtn.disabled = false;
-                } else {
-                    fileNameDisplay.textContent = '';
-                    whatsappBtn.disabled = true;
-                }
-            });
         }
         
         function setupModals() {
@@ -445,9 +435,9 @@
                     body: JSON.stringify(data)
                 });
                 if (!response.ok) { const error = await response.json(); throw new Error(error.message || 'Error al guardar.'); }
-                alert("Serás redirigido a WhatsApp. No olvides adjuntar manualmente tu comprobante.");
+                alert("Serás redirigido a WhatsApp para reportar tu pago.");
                 const amount = selectedTickets.length * CONFIG.pricePerTicket;
-                const message = encodeURIComponent(`*NUEVO PAGO - YORGELIS TE PREMIA*\n\n*Nombre:* ${data.name}\n*Cédula:* ${data.id_number}\n*Teléfono:* ${data.phone}\n*Boletos:* ${selectedTickets.length} (${selectedTickets.map(n => formatTicketNumber(n)).join(', ')})\n*Referencia:* ${data.reference}\n*Monto:* ${amount} Bs.\n\n_Adjunto mi comprobante._`);
+                const message = encodeURIComponent(`*NUEVO PAGO - YORGELIS TE PREMIA*\n\n*Nombre:* ${data.name}\n*Cédula:* ${data.id_number}\n*Teléfono:* ${data.phone}\n*Boletos:* ${selectedTickets.length} (${selectedTickets.map(n => formatTicketNumber(n)).join(', ')})\n*Referencia:* ${data.reference}\n*Monto:* ${amount} Bs.`);
                 window.open(`https://wa.me/${CONFIG.adminWhatsApp}?text=${message}`, '_blank');
                 goToStep(4);
             } catch(error) {
@@ -482,7 +472,3 @@
     </script>
 </body>
 </html>
-
-
-
-
