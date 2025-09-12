@@ -121,7 +121,7 @@
                 const response = await fetch(`${CONFIG.supabaseUrl}/rest/v1/${query}`, { headers: { 'apikey': CONFIG.supabaseKey } });
                 const transactions = await response.json();
                 renderTable(transactions);
-                updateStats(transactions); // <-- ESTA LÍNEA ES LA CORRECCIÓN CLAVE
+                updateStats(transactions);
             } catch (error) { console.error("Error cargando transacciones:", error); }
         }
 
@@ -200,7 +200,6 @@
                     }
                     buyerCounts[buyerId].count += tx.tickets_data.length;
                 }
-                // Los boletos vendidos se cuentan desde la tabla 'tickets' asociada
                 if(tx.tickets && tx.tickets.length > 0) {
                     soldTicketsCount += tx.tickets.length;
                 }
