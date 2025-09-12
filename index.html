@@ -202,10 +202,10 @@
         const CONFIG = {
             supabaseUrl: "https://ubgpfgazgaotnhqieaew.supabase.co",
             supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZ3BmZ2F6Z2FvdG5ocWllYWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczNzI1NzEsImV4cCI6MjA3Mjk0ODU3MX0.v0FZj87h2VGhB8S_TazRLuy-4um0XiMDVotdredoN7s",
-            adminWhatsApp: "584120000000",
+            adminWhatsApp: "584129058819",
             totalTickets: 10000, 
-            pricePerTicket: 80,
-            prizeImage: "https://i.ibb.co/RTbcLX0p/combo-ogra-2-0.jpg",
+            pricePerTicket: 70,
+            prizeImage: "https://i.ibb.co/TDPDdqH2/photo-5053581550268035376-y.jpg",
             maxTicketsPerPurchase: 100
         };
         let soldTicketNumbers = new Set(), availableTickets = [], selectedTickets = [], quantityToBuy = 0;
@@ -217,8 +217,8 @@
             new Swiper('.swiper-container', { pagination: { el: '.swiper-pagination' }, loop: true });
             document.getElementById('prizeImage').src = CONFIG.prizeImage;
             document.getElementById('mobileBank').textContent = "Banco de Venezuela";
-            document.getElementById('mobilePhone').textContent = "0412-0000000";
-            document.getElementById('mobileId').textContent = "V-12345678";
+            document.getElementById('mobilePhone').textContent = "0412-91941580";
+            document.getElementById('mobileId').textContent = "V-27549307";
             
             await fetchSoldTickets();
             setupEventListeners();
@@ -473,6 +473,7 @@
     </script>
 </body>
 </html>
+
 
 
 
