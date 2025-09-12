@@ -227,9 +227,18 @@
 
         async function fetchSoldTickets() {
             try {
-                const response = await fetch(`${CONFIG.supabaseUrl}/rest/v1/tickets?select=ticket_number`, { headers: { 'apikey': CONFIG.supabaseKey } });
-                if (!response.ok) throw new Error('Error de red al obtener boletos');
+                // --- CAMBIO PRINCIPAL ---
+                // Llamamos a la nueva función que obtiene boletos vendidos Y pendientes
+                const response = await fetch(`${CONFIG.supabaseUrl}/rest/v1/rpc/get_unavailable_tickets`, {
+                    method: 'POST', // Los RPC se llaman con POST
+                    headers: { 'apikey': CONFIG.supabaseKey }
+                });
+
+                if (!response.ok) throw new Error('Error de red al obtener boletos no disponibles');
+                
                 const data = await response.json();
+                
+                // El resto de la función sigue igual
                 soldTicketNumbers = new Set(data.map(t => t.ticket_number));
                 availableTickets = Array.from({ length: CONFIG.totalTickets }, (_, i) => i).filter(num => !soldTicketNumbers.has(num));
                 updateProgressBar();
@@ -473,7 +482,6 @@
     </script>
 </body>
 </html>
-
 
 
 
